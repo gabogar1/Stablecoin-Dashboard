@@ -63,16 +63,26 @@ export interface DashboardMetrics {
   totalMarketCapChange: number;
   totalVolumeChange: number;
   growthRateChange: number;
+  totalMarketCapChangeYoy: number;
 }
 
 export interface ChartDataPoint {
   week: string;
   total_market_cap: number;
-  usdt?: number;
-  usdc?: number;
-  busd?: number;
-  dai?: number;
+  usdt: number; // Tether
+  usdc: number; // USD Coin  
+  dai: number;  // Dai
+  busd: number; // Binance USD
+  frax: number; // Frax
+  tusd: number; // TrueUSD
   formatted_date?: string;
+}
+
+export interface WeeklyMarketData {
+  coin_name: string;
+  coin_id: string;
+  week: string;
+  market_cap: number;
 }
 
 export interface ApiResponse<T> {

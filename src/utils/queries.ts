@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import type { Database, DashboardMetrics, ChartDataPoint } from '@/types/database';
+import type { Database, DashboardMetrics, ChartDataPoint, WeeklyMarketData } from '@/types/database';
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -403,6 +403,8 @@ export async function getWeeklyChartData(supabase: SupabaseClient): Promise<Char
       usdc: (data.coins.get('usdc') || 0) / 1e9,
       busd: (data.coins.get('busd') || 0) / 1e9,
       dai: (data.coins.get('dai') || 0) / 1e9,
+      frax: (data.coins.get('frax') || 0) / 1e9,
+      tusd: (data.coins.get('tusd') || 0) / 1e9,
       formatted_date: new Date(week).toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric' 
@@ -461,4 +463,165 @@ export async function getPreviousPeriodData(supabase: SupabaseClient): Promise<{
 export function calculatePercentageChange(current: number, previous: number): number {
   if (previous === 0) return 0;
   return ((current - previous) / previous) * 100;
+}
+
+/**
+ * Fetches market development per week per coin using the latest timestamp per week
+ * Excludes the current day to get complete weekly data
+ */
+export async function getMarketPerCoinPerWeek(supabase: SupabaseClient): Promise<WeeklyMarketData[]> {
+  // Use raw SQL query with CTE for weekly market development per coin
+  const { data, error } = await supabase.rpc('get_market_per_coin_per_week');
+
+  if (error) {
+    console.warn('RPC function not available, falling back to manual calculation:', error.message);
+    
+    // Fallback to manual implementation
+    // First, get the maximum timestamp to exclude current day
+    const { data: maxTimestamp, error: maxError } = await supabase
+      .from('stablecoin_market_caps')
+      .select('timestamp_utc')
+      .order('timestamp_utc', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (maxError || !maxTimestamp) {
+      throw new Error(`Failed to fetch max timestamp: ${maxError?.message}`);
+    }
+
+    const maxDate = new Date(maxTimestamp.timestamp_utc);
+    const maxDayStart = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate());
+
+    // Get data from the last 2 years to ensure we have enough historical data
+    const twoYearsAgo = new Date(maxDayStart);
+    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+
+    // Get all data excluding the current day, but starting from 2 years ago
+    const { data: allData, error: dataError } = await supabase
+      .from('stablecoin_market_caps')
+      .select('coin_name, coin_id, timestamp_utc, market_cap_usd')
+      .lt('timestamp_utc', maxDayStart.toISOString())
+      .gte('timestamp_utc', twoYearsAgo.toISOString()) // Ensure we get last 2 years
+      .order('timestamp_utc', { ascending: false });
+
+    if (dataError) {
+      throw new Error(`Failed to fetch weekly market data: ${dataError.message}`);
+    }
+
+    if (!allData || allData.length === 0) {
+      return [];
+    }
+
+    // Group by coin_id and week, keeping only the latest timestamp per week per coin
+    const weeklyData = new Map<string, WeeklyMarketData>();
+
+    allData.forEach(record => {
+      const date = new Date(record.timestamp_utc);
+      // Calculate week start (Monday)
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay() + 1);
+      const weekKey = `${record.coin_id}-${weekStart.toISOString().slice(0, 10)}`;
+      
+      // Only keep the latest timestamp for each coin per week
+      const existing = weeklyData.get(weekKey);
+      if (!existing || new Date(record.timestamp_utc) > new Date(existing.week)) {
+        weeklyData.set(weekKey, {
+          coin_name: record.coin_name,
+          coin_id: record.coin_id,
+          week: weekStart.toISOString().slice(0, 10),
+          market_cap: record.market_cap_usd
+        });
+      }
+    });
+
+    // Convert to array and sort by week descending
+    return Array.from(weeklyData.values())
+      .sort((a, b) => b.week.localeCompare(a.week));
+  }
+
+  return data || [];
+}
+
+/**
+ * Calculates the market cap percentage change from last year (51 weeks ago)
+ * Uses the first record per coin for the latest day vs same day 51 weeks ago
+ */
+export async function getMarketCapChangeFromLastYear(supabase: SupabaseClient): Promise<number> {
+  // Use raw SQL query with CTEs for market cap percentage change from last year
+  const { data, error } = await supabase.rpc('get_market_cap_yoy_change');
+
+  if (error) {
+    console.warn('RPC function not available, falling back to manual calculation:', error.message);
+    
+    // Fallback to manual implementation
+    // Get the latest timestamp in the database
+    const { data: latestTimestamp, error: timestampError } = await supabase
+      .from('stablecoin_market_caps')
+      .select('timestamp_utc')
+      .order('timestamp_utc', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (timestampError || !latestTimestamp) {
+      throw new Error(`Failed to fetch latest timestamp: ${timestampError?.message}`);
+    }
+
+    const latestDate = new Date(latestTimestamp.timestamp_utc);
+    const latestDayStart = new Date(latestDate.getFullYear(), latestDate.getMonth(), latestDate.getDate());
+    const latestDayEnd = new Date(latestDayStart.getTime() + 24 * 60 * 60 * 1000);
+    
+    // Calculate same day 51 weeks ago
+    const fiftyOneWeeksAgo = new Date(latestDayStart);
+    fiftyOneWeeksAgo.setDate(fiftyOneWeeksAgo.getDate() - (51 * 7));
+    const fiftyOneWeeksAgoEnd = new Date(fiftyOneWeeksAgo.getTime() + 24 * 60 * 60 * 1000);
+
+    // Get current period data (latest day)
+    const { data: currentRecords, error: currentError } = await supabase
+      .from('stablecoin_market_caps')
+      .select('coin_id, market_cap_usd, timestamp_utc')
+      .gte('timestamp_utc', latestDayStart.toISOString())
+      .lt('timestamp_utc', latestDayEnd.toISOString())
+      .order('coin_id')
+      .order('timestamp_utc');
+
+    // Get previous period data (51 weeks ago)
+    const { data: previousRecords, error: previousError } = await supabase
+      .from('stablecoin_market_caps')
+      .select('coin_id, market_cap_usd, timestamp_utc')
+      .gte('timestamp_utc', fiftyOneWeeksAgo.toISOString())
+      .lt('timestamp_utc', fiftyOneWeeksAgoEnd.toISOString())
+      .order('coin_id')
+      .order('timestamp_utc');
+
+    if (currentError || previousError) {
+      throw new Error(`Failed to fetch year-over-year market cap data: ${currentError?.message || previousError?.message}`);
+    }
+
+    // Calculate current total (first record per coin)
+    const currentCoinMarketCaps = new Map<string, number>();
+    currentRecords?.forEach(record => {
+      if (!currentCoinMarketCaps.has(record.coin_id)) {
+        currentCoinMarketCaps.set(record.coin_id, record.market_cap_usd);
+      }
+    });
+    const currentTotal = Array.from(currentCoinMarketCaps.values()).reduce((sum, cap) => sum + cap, 0);
+
+    // Calculate previous total (first record per coin)
+    const previousCoinMarketCaps = new Map<string, number>();
+    previousRecords?.forEach(record => {
+      if (!previousCoinMarketCaps.has(record.coin_id)) {
+        previousCoinMarketCaps.set(record.coin_id, record.market_cap_usd);
+      }
+    });
+    const previousTotal = Array.from(previousCoinMarketCaps.values()).reduce((sum, cap) => sum + cap, 0);
+
+    // Calculate percentage change
+    if (previousTotal === 0) {
+      return 0;
+    }
+
+    return ((currentTotal - previousTotal) / previousTotal) * 100;
+  }
+
+  return data || 0;
 } 

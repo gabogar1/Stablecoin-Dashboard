@@ -72,6 +72,10 @@ ON stablecoin_market_caps (timestamp_utc, coin_symbol);
 -- Index for current day queries (coin_id and date)
 CREATE INDEX idx_stablecoin_market_caps_coin_date
 ON stablecoin_market_caps (coin_id, (timestamp_utc::date));
+
+-- Index for weekly queries (coin_id and week)
+CREATE INDEX idx_stablecoin_market_caps_coin_week
+ON stablecoin_market_caps (coin_id, (date_trunc('week', timestamp_utc)));
 ```
 
 ## Sample Data
@@ -330,6 +334,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to get market development per week per coin using exact query pattern
+CREATE OR REPLACE FUNCTION get_market_per_coin_per_week()
+RETURNS TABLE(coin_name VARCHAR, coin_id VARCHAR, week TIMESTAMP, market_cap NUMERIC) AS $$
+BEGIN
+    RETURN QUERY
+    WITH temp as (
+        SELECT *
+        FROM stablecoin_market_caps
+        WHERE timestamp_utc < (SELECT date_trunc('day', MAX(timestamp_utc)) FROM stablecoin_market_caps)
+        ORDER BY timestamp_utc DESC
+    )
+    SELECT
+        temp.coin_name,
+        temp.coin_id,
+        date_trunc('week', temp.timestamp_utc) as week,
+        SUM(temp.market_cap_usd) as market_cap
+    FROM temp
+    WHERE temp.timestamp_utc = (
+        SELECT MAX(m2.timestamp_utc)
+        FROM temp m2
+        WHERE m2.coin_id = temp.coin_id
+        AND date_trunc('week', m2.timestamp_utc) = date_trunc('week', temp.timestamp_utc)
+    )
+    GROUP BY 1, 2, 3
+    ORDER BY 3 DESC;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Function to get monthly growth rate
 CREATE OR REPLACE FUNCTION get_monthly_growth_rate()
 RETURNS NUMERIC AS $$
@@ -369,52 +401,57 @@ SELECT
     get_market_cap_perc_change() as market_cap_change_percent,
     get_volume_perc_change() as volume_change_percent;
 
--- Test the underlying volume query manually
-WITH temp as (
-    SELECT
-        *,
-        RANK() OVER (PARTITION BY coin_id ORDER BY timestamp_utc) as rank
-    FROM stablecoin_market_caps
-    WHERE date_trunc('day', NOW()) = timestamp_utc::date
-)
-SELECT
-    coin_id,
-    coin_name,
-    volume_24h_usd,
-    timestamp_utc,
-    rank
-FROM temp
-WHERE rank = 1
-ORDER BY volume_24h_usd DESC;
+-- Test the weekly market data function
+SELECT * FROM get_market_per_coin_per_week() LIMIT 20;
 
--- Test the volume percentage change query manually
-WITH current_cap as (
-    WITH temp as (
-        SELECT *,
-        RANK() OVER (PARTITION BY coin_id ORDER BY timestamp_utc) as rank
-        FROM stablecoin_market_caps
-        WHERE date_trunc('day', NOW()) = timestamp_utc::date
-    )
-    SELECT SUM(volume_24h_usd) as current_total
-    FROM temp
-    WHERE rank = 1
-),
-previous_cap as (
-    WITH temp as (
-        SELECT *,
-        RANK() OVER (PARTITION BY coin_id ORDER BY timestamp_utc) as rank
-        FROM stablecoin_market_caps
-        WHERE date_trunc('day', NOW() - INTERVAL '1 month') = timestamp_utc::date
-    )
-    SELECT SUM(volume_24h_usd) as previous_total
-    FROM temp
-    WHERE rank = 1
+-- Test the underlying weekly market query manually
+WITH temp as (
+    SELECT *
+    FROM stablecoin_market_caps
+    WHERE timestamp_utc < (SELECT date_trunc('day', MAX(timestamp_utc)) FROM stablecoin_market_caps)
+    ORDER BY timestamp_utc DESC
 )
 SELECT
-    current_total,
-    previous_total,
-    ((current_total - previous_total) / previous_total * 100) as volume_percentage_change
-FROM current_cap, previous_cap;
+    coin_name,
+    coin_id,
+    date_trunc('week', timestamp_utc) as week,
+    SUM(market_cap_usd) as market_cap,
+    COUNT(*) as records_in_week
+FROM temp
+WHERE timestamp_utc = (
+    SELECT MAX(timestamp_utc)
+    FROM temp m2
+    WHERE m2.coin_id = temp.coin_id
+    AND date_trunc('week', m2.timestamp_utc) = date_trunc('week', temp.timestamp_utc)
+)
+GROUP BY 1, 2, 3
+ORDER BY 3 DESC, 4 DESC
+LIMIT 20;
+
+-- Test weekly breakdown for a specific coin
+WITH temp as (
+    SELECT *
+    FROM stablecoin_market_caps
+    WHERE timestamp_utc < (SELECT date_trunc('day', MAX(timestamp_utc)) FROM stablecoin_market_caps)
+    AND coin_id = 'tether'  -- Change to test different coins
+    ORDER BY timestamp_utc DESC
+)
+SELECT
+    coin_name,
+    coin_id,
+    date_trunc('week', timestamp_utc) as week,
+    SUM(market_cap_usd) as market_cap,
+    MAX(timestamp_utc) as latest_timestamp_in_week
+FROM temp
+WHERE timestamp_utc = (
+    SELECT MAX(timestamp_utc)
+    FROM temp m2
+    WHERE m2.coin_id = temp.coin_id
+    AND date_trunc('week', m2.timestamp_utc) = date_trunc('week', temp.timestamp_utc)
+)
+GROUP BY 1, 2, 3
+ORDER BY 3 DESC
+LIMIT 10;
 
 -- Test the current day data breakdown for both metrics
 WITH temp as (
@@ -436,4 +473,4 @@ WHERE rank = 1
 ORDER BY market_cap_usd DESC;
 ```
 
-This will show you exactly which records are being used for both market cap and volume calculations and help verify the percentage changes are calculated correctly.
+This will show you exactly which records are being used for all calculations and help verify the weekly market development data is processed correctly. The weekly function excludes the current day to ensure complete weekly data and uses the latest timestamp within each week for each coin.

@@ -7,6 +7,7 @@ import {
   DollarSign,
   LineChart,
   RefreshCw,
+  TrendingUp,
 } from "lucide-react";
 
 import {
@@ -195,21 +196,21 @@ export default function Dashboard() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Growth Rate (MoM)
+                    Market Cap (YoY)
                   </CardTitle>
-                  <LineChart className="h-4 w-4 text-muted-foreground" />
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
                     {
-                      formatPercentageChange(metrics.growthRateMonthly)
+                      formatPercentageChange(metrics.totalMarketCapChangeYoy)
                         .formatted
                     }
                   </div>
                   <p className="text-xs text-muted-foreground">
                     <span
                       className={`flex items-center ${
-                        formatPercentageChange(metrics.growthRateChange)
+                        formatPercentageChange(metrics.totalMarketCapChangeYoy)
                           .isPositive
                           ? "text-green-500"
                           : "text-red-500"
@@ -217,16 +218,18 @@ export default function Dashboard() {
                     >
                       {(() => {
                         const { formatted, icon: Icon } =
-                          formatPercentageChange(metrics.growthRateChange);
+                          formatPercentageChange(
+                            metrics.totalMarketCapChangeYoy
+                          );
                         return (
                           <>
                             <Icon className="mr-1 h-4 w-4" />
-                            {formatted}
+                            {/* {formatted} */}
                           </>
                         );
                       })()}
                     </span>{" "}
-                    from previous month
+                    from same day last year
                   </p>
                 </CardContent>
               </Card>
@@ -236,16 +239,7 @@ export default function Dashboard() {
 
         <div className="grid gap-4 grid-cols-1">
           <Card className="col-span-4">
-            <CardHeader>
-              <CardTitle>Stablecoin Market Cap Development</CardTitle>
-              <CardDescription>
-                Historical market capitalization of major stablecoins over the
-                past 12 months
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <StablecoinChartConnected className="h-[350px]" />
-            </CardContent>
+            <StablecoinChartConnected className="h-[415px]" />
           </Card>
         </div>
       </div>

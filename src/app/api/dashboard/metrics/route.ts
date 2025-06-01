@@ -6,6 +6,7 @@ import {
   getMonthlyGrowthRate,
   getTotalMarketCapChange,
   getTotalVolumeChange,
+  getMarketCapChangeFromLastYear,
 } from '@/utils/queries';
 import type { DashboardMetrics, ApiResponse } from '@/types/database';
 
@@ -24,12 +25,14 @@ export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>
       growthRateMonthly,
       totalMarketCapChange,
       totalVolumeChange,
+      totalMarketCapChangeYoy,
     ] = await Promise.all([
       getTotalMarketCap(supabase),
       getTotalVolume24h(supabase),
       getMonthlyGrowthRate(supabase),
       getTotalMarketCapChange(supabase),
       getTotalVolumeChange(supabase),
+      getMarketCapChangeFromLastYear(supabase),
     ]);
 
     // For growth rate change, we'll use a simple calculation
@@ -43,6 +46,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>
       totalMarketCapChange,
       totalVolumeChange,
       growthRateChange,
+      totalMarketCapChangeYoy,
     };
 
     return NextResponse.json({
