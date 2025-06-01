@@ -4,9 +4,10 @@ A Next.js dashboard for tracking stablecoin market data with real-time analytics
 
 ## Features
 
-- **Real-time Market Metrics**: Total market capitalization, 24h trading volume, and month-over-month growth rates
+- **Real-time Market Metrics**: Total market capitalization, 24h trading volume, month-over-month growth rates, and year-over-year market cap comparison
 - **Interactive Charts**: Historical market cap development over the past 12 months with area charts
 - **Multi-Stablecoin Support**: Track USDT, USDC, BUSD, DAI and other major stablecoins
+- **Year-over-Year Analytics**: Track market cap growth trends with 51-week comparisons
 - **Responsive Design**: Modern UI built with Tailwind CSS and shadcn/ui components
 - **TypeScript**: Fully typed for better development experience
 - **Production Ready**: Built with performance and scalability in mind
@@ -82,9 +83,59 @@ The dashboard requires a `stablecoin_market_caps` table with the following struc
 | `created_at`       | `timestamptz` | Record creation timestamp      |
 | `updated_at`       | `timestamptz` | Record update timestamp        |
 
+## Database Functions (Optional RPC Functions)
+
+For optimal performance, you can create the following Supabase RPC functions. The application will fall back to manual calculations if these functions are not available:
+
+### get_market_cap_yoy_change()
+
+Returns the year-over-year market cap percentage change (51-week comparison):
+
+```sql
+CREATE OR REPLACE FUNCTION get_market_cap_yoy_change()
+RETURNS NUMERIC AS $$
+WITH current_cap as (
+    WITH temp as (
+        select *,
+        RANK() OVER (partition by coin_id ORDER BY timestamp_utc) as rank
+        from stablecoin_market_caps
+        where (select date_trunc('day',max(timestamp_utc)) from stablecoin_market_caps)  = timestamp_utc::date
+    )
+    select sum(market_cap_usd) as current_total
+    from temp
+    where rank = 1
+),
+previous_cap as (
+    WITH temp as (
+        select *,
+        RANK() OVER (partition by coin_id ORDER BY timestamp_utc) as rank
+        from stablecoin_market_caps
+        where (select date_trunc('day',max(timestamp_utc)) from stablecoin_market_caps) - interval '51 weeks'  = timestamp_utc::date
+    )
+    select sum(market_cap_usd) as previous_total
+    from temp
+    where rank = 1
+)
+select
+    ((current_total - previous_total) / previous_total * 100) as percentage_change
+from current_cap, previous_cap;
+$$ LANGUAGE SQL;
+```
+
+### Other Available RPC Functions
+
+The application also supports these optional RPC functions for improved performance:
+
+- `get_current_market_cap()` - Current total market capitalization
+- `get_market_cap_perc_change()` - Month-over-month market cap change
+- `get_current_volume()` - Current total 24h volume
+- `get_volume_perc_change()` - Month-over-month volume change
+- `get_monthly_growth_rate()` - Monthly growth rate calculation
+- `get_market_per_coin_per_week()` - Weekly market data per coin
+
 ## API Endpoints
 
-- `GET /api/dashboard/metrics` - Returns dashboard metrics (market cap, volume, growth rates)
+- `GET /api/dashboard/metrics` - Returns dashboard metrics (market cap, volume, growth rates, year-over-year comparison)
 - `GET /api/dashboard/chart-data` - Returns weekly chart data for the past 12 months
 
 ## Project Structure
@@ -108,6 +159,7 @@ src/
 - **Total Market Cap**: Sum of all stablecoin market capitalizations
 - **Total Volume (24h)**: Combined 24-hour trading volume
 - **Growth Rate (MoM)**: Month-over-month growth percentage
+- **Market Cap (YoY)**: Year-over-year market cap percentage change (51-week comparison)
 
 ### Chart Visualization
 
@@ -147,6 +199,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 2. Set up the database schema (see `SUPABASE_SETUP.md`)
 3. Configure Row Level Security if needed
 4. Add sample data for testing
+5. Optionally create RPC functions for better performance (see Database Functions section above)
 
 ## Deployment
 
@@ -189,6 +242,7 @@ The app can be deployed to any platform that supports Next.js:
 2. **Empty dashboard**: Ensure database has sample data
 3. **Build errors**: Verify all TypeScript types are correct
 4. **Slow queries**: Check database indexes are created
+5. **Year-over-year data missing**: Ensure you have data from at least 51 weeks ago
 
 ### Getting Help
 
@@ -206,3 +260,7 @@ This project is open source and available under the [MIT License](LICENSE).
 - [shadcn/ui](https://ui.shadcn.com/) for the component library
 - [Recharts](https://recharts.org/) for chart visualization
 - [Next.js](https://nextjs.org/) for the React framework
+
+```
+
+```
