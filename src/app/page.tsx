@@ -5,7 +5,6 @@ import {
   ArrowUp,
   BarChart3,
   DollarSign,
-  LineChart,
   RefreshCw,
   TrendingUp,
 } from "lucide-react";
@@ -13,7 +12,6 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/app/components/ui/card";
