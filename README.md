@@ -200,39 +200,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 4. Add sample data for testing
 5. Optionally create RPC functions for better performance (see Database Functions section above)
 
-## Deployment
-
-### Vercel (Recommended)
-
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### Other Platforms
-
-The app can be deployed to any platform that supports Next.js:
-
-- Netlify
-- Railway
-- Digital Ocean App Platform
-- AWS Amplify
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-### Development Guidelines
-
-- Follow TypeScript best practices
-- Use functional components with hooks
-- Implement proper error handling
-- Add JSDoc comments for functions
-- Test your changes thoroughly
-
 ## Troubleshooting
 
 ### Common Issues
@@ -248,10 +215,6 @@ The app can be deployed to any platform that supports Next.js:
 - Check `SUPABASE_SETUP.md` for detailed setup instructions
 - Review the browser console for error messages
 - Ensure all environment variables are set correctly
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
 
 ## Acknowledgments
 
