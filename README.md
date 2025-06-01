@@ -34,7 +34,6 @@ A Next.js dashboard for tracking stablecoin market data with real-time analytics
 
 ```bash
 git clone <repository-url>
-cd moonpay_nextjs
 ```
 
 2. **Install dependencies**:
