@@ -108,31 +108,6 @@ npm install @supabase/ssr @supabase/supabase-js
 npm run dev
 ```
 
-## File Structure
-
-The Supabase integration includes these files:
-
-```
-/src
-  /types
-    - database.ts (TypeScript interfaces)
-  /lib
-    /supabase
-      - client.ts (browser client)
-      - server.ts (server client)
-  /utils
-    - queries.ts (database query helpers)
-  /app
-    /api
-      /dashboard
-        - metrics/route.ts (API for dashboard metrics)
-        - chart-data/route.ts (API for chart data)
-  /hooks
-    - useDashboardMetrics.ts (React hook for metrics)
-  /components
-    - StablecoinChartConnected.tsx (chart with real data)
-```
-
 ## API Endpoints
 
 The dashboard uses these API endpoints:
@@ -188,24 +163,6 @@ For production deployments:
 4. **Query Optimization**: Use `select()` to limit columns returned
 
 ## Optional Enhancements
-
-### Real-time Updates
-
-If you want live updates, you can enable Supabase real-time subscriptions:
-
-```typescript
-const subscription = supabase
-  .channel("stablecoin-updates")
-  .on(
-    "postgres_changes",
-    { event: "INSERT", schema: "public", table: "stablecoin_market_caps" },
-    (payload) => {
-      // Handle real-time updates
-      console.log("New data:", payload);
-    }
-  )
-  .subscribe();
-```
 
 ### Database Functions
 
@@ -453,24 +410,6 @@ GROUP BY 1, 2, 3
 ORDER BY 3 DESC
 LIMIT 10;
 
--- Test the current day data breakdown for both metrics
-WITH temp as (
-    SELECT
-        *,
-        RANK() OVER (PARTITION BY coin_id ORDER BY timestamp_utc) as rank
-    FROM stablecoin_market_caps
-    WHERE date_trunc('day', NOW()) = timestamp_utc::date
-)
-SELECT
-    coin_id,
-    coin_name,
-    market_cap_usd,
-    volume_24h_usd,
-    timestamp_utc,
-    rank
-FROM temp
-WHERE rank = 1
-ORDER BY market_cap_usd DESC;
 ```
 
 This will show you exactly which records are being used for all calculations and help verify the weekly market development data is processed correctly. The weekly function excludes the current day to ensure complete weekly data and uses the latest timestamp within each week for each coin.

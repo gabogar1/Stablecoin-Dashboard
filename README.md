@@ -222,7 +222,3 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 - [shadcn/ui](https://ui.shadcn.com/) for the component library
 - [Recharts](https://recharts.org/) for chart visualization
 - [Next.js](https://nextjs.org/) for the React framework
-
-```
-
-```
