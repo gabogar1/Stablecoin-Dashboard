@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import type { Database, DashboardMetrics, ChartDataPoint, WeeklyMarketData } from '@/types/database';
+import type { ChartDataPoint, WeeklyMarketData } from '@/types/database';
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 

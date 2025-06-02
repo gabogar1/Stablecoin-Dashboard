@@ -79,7 +79,15 @@ const chartConfig = {
 };
 
 // Custom tooltip content component
-const CustomTooltipContent = ({ active, payload, label }: any) => {
+const CustomTooltipContent = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}) => {
   if (!active || !payload || !payload.length) {
     return null;
   }

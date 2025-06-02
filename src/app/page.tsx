@@ -215,10 +215,9 @@ export default function Dashboard() {
                       }`}
                     >
                       {(() => {
-                        const { formatted, icon: Icon } =
-                          formatPercentageChange(
-                            metrics.totalMarketCapChangeYoy
-                          );
+                        const { icon: Icon } = formatPercentageChange(
+                          metrics.totalMarketCapChangeYoy
+                        );
                         return (
                           <>
                             <Icon className="mr-1 h-4 w-4" />

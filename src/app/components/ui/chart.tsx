@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
-    config: Record<string, any>;
+    config?: Record<string, unknown>;
   }
->(({ className, config, ...props }, ref) => {
+>(({ className, ...props }, ref) => {
   return (
     <div
       ref={ref}
@@ -31,7 +31,7 @@ ChartContainer.displayName = "ChartContainer";
 const ChartTooltip = ({
   content: Content,
 }: {
-  content: React.ComponentType<any>;
+  content: React.ComponentType<Record<string, unknown>>;
 }) => {
   return <Content />;
 };
