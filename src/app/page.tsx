@@ -90,9 +90,25 @@ export default function Dashboard() {
     <div className="flex min-h-screen w-full flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">
-            Stablecoin Market Dashboard
-          </h2>
+          <div className="flex flex-col gap-2 ">
+            <h2 className="text-3xl font-bold tracking-tight">
+              Stablecoin Market Dashboard
+            </h2>
+            <div className="flex-col items-start gap-2">
+              <p className="text-sm text-muted-foreground">
+                Made by{" "}
+                <a
+                  href="https://www.linkedin.com/in/gabriel-garcia-suarez/"
+                  className="text-primary hover:underline"
+                >
+                  Gabriel García Suárez
+                </a>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Last updated: 2025-06-02
+              </p>
+            </div>
+          </div>
           {!loading && (
             <button
               onClick={refetch}
