@@ -100,6 +100,7 @@ export default function Dashboard() {
                 <a
                   href="https://www.linkedin.com/in/gabriel-garcia-suarez/"
                   className="text-primary hover:underline"
+                  target="_blank"
                 >
                   Gabriel García Suárez
                 </a>
