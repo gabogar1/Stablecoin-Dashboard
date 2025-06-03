@@ -106,7 +106,7 @@ export default function Dashboard() {
                 </a>
               </p>
               <p className="text-sm text-muted-foreground">
-                Last updated: 2025-06-02
+                Last updated: 2025-06-03
               </p>
             </div>
           </div>
