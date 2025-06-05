@@ -26,6 +26,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>
       totalMarketCapChange,
       totalVolumeChange,
       totalMarketCapChangeYoy,
+      lastUpdatedResult,
     ] = await Promise.all([
       getTotalMarketCap(supabase),
       getTotalVolume24h(supabase),
@@ -33,7 +34,27 @@ export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>
       getTotalMarketCapChange(supabase),
       getTotalVolumeChange(supabase),
       getMarketCapChangeFromLastYear(supabase),
+      // Fetch the most recent updated_at date
+      supabase
+        .from('stablecoin_market_caps')
+        .select('updated_at')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single(),
     ]);
+
+    // Handle potential error from lastUpdatedResult
+    if (lastUpdatedResult.error) {
+      throw new Error(`Failed to fetch last updated date: ${lastUpdatedResult.error.message}`);
+    }
+
+    // Format the date as "Jun 3, 2025"
+    const lastUpdatedDate = new Date(lastUpdatedResult.data.updated_at);
+    const lastUpdated = lastUpdatedDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
 
     // For growth rate change, we'll use a simple calculation
     // In a real scenario, you might want to compare with previous month's growth rate
@@ -47,6 +68,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>
       totalVolumeChange,
       growthRateChange,
       totalMarketCapChangeYoy,
+      lastUpdated,
     };
 
     return NextResponse.json({

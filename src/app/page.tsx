@@ -106,7 +106,8 @@ export default function Dashboard() {
                 </a>
               </p>
               <p className="text-sm text-muted-foreground">
-                Last updated: 2025-06-03
+                Last updated:{" "}
+                {loading ? "Loading..." : metrics?.lastUpdated || "N/A"}
               </p>
             </div>
           </div>

@@ -64,6 +64,7 @@ export interface DashboardMetrics {
   totalVolumeChange: number;
   growthRateChange: number;
   totalMarketCapChangeYoy: number;
+  lastUpdated: string;
 }
 
 export interface ChartDataPoint {
