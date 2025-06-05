@@ -109,6 +109,16 @@ export default function Dashboard() {
                 Last updated:{" "}
                 {loading ? "Loading..." : metrics?.lastUpdated || "N/A"}
               </p>
+              <p className="text-sm text-muted-foreground">
+                Source:{" "}
+                <a
+                  href="https://www.coingecko.com/"
+                  className="text-primary hover:underline"
+                  target="_blank"
+                >
+                  coingecko.com
+                </a>
+              </p>
             </div>
           </div>
           {!loading && (
