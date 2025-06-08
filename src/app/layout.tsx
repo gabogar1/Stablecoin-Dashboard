@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stablecoin examination",
-  description: "A deeper look into the stablecoin market and opportunities",
+  title: "Stablecoins examination",
+  description: "A deeper look into the stablecoins market and opportunities",
 };
 
 export default function RootLayout({

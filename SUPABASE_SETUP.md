@@ -1,6 +1,6 @@
 # Supabase Integration Setup Guide
 
-This guide will help you set up the Supabase integration for the Stablecoin Market Dashboard.
+This guide will help you set up the Supabase integration for the Stablecoins Market Dashboard.
 
 ## Prerequisites
 

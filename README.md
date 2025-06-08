@@ -1,6 +1,6 @@
-# Stablecoin Market Dashboard
+# Stablecoins Market Dashboard
 
-A Next.js dashboard for tracking stablecoin market data (USDT, USDC, DAI, BUSD, FRAX and TrueUSD) with real-time analytics and visualizations, powered by Supabase.
+A Next.js dashboard for tracking stablecoins market data (USDT, USDC, DAI, BUSD, FRAX and TrueUSD) with real-time analytics and visualizations, powered by Supabase.
 
 You can see the live dashboard at [stablecoins.gabrielgarciasuarez.com](https://stablecoins.gabrielgarciasuarez.com/).
 
@@ -8,7 +8,7 @@ As of June 8th, 2025 this dahsboard showcases the following:
 
 1. **Massive Scale with Strong Growth Momentum at $220B Market Cap**
 
-   The stablecoin market has reached $220B in total market capitalization with impressive 45.4% year-over-year growth. Daily trading volume of $32.4B shows this isn't just stored value but actively used financial infrastructure.
+   The stablecoins market has reached $220B in total market capitalization with impressive 45.4% year-over-year growth. Daily trading volume of $32.4B shows this isn't just stored value but actively used financial infrastructure.
 
 2. **Remarkable Stability Despite Scale with 2.5% MoM Market Cap Growth**
 
