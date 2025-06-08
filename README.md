@@ -7,13 +7,16 @@ You can see the live dashboard at [stablecoins.gabrielgarciasuarez.com](https://
 As of June 8th, 2025 this dahsboard showcases the following:
 
 1. Massive Scale with Strong Growth Momentum
-   The stablecoin market has reached $220B in total market capitalization with impressive 45.4% year-over-year growth. Daily trading volume of $32.4B shows this isn't just stored value but actively used financial infrastructure.
+
+The stablecoin market has reached $220B in total market capitalization with impressive 45.4% year-over-year growth. Daily trading volume of $32.4B shows this isn't just stored value but actively used financial infrastructure.
 
 2. Remarkable Stability Despite Scale
-   The 12-week chart shows the market has maintained steady levels around $220B with minimal volatility. The slight upward trend (+2.5% month-over-month) suggests controlled, sustainable growth rather than speculative bubbles.
+
+The 12-week chart shows the market has maintained steady levels around $220B with minimal volatility. The slight upward trend (+2.5% month-over-month) suggests controlled, sustainable growth rather than speculative bubbles.
 
 3. Big Market Concentration
-   The visual clearly shows Tether (USDT) dominates the market, representing roughly 65-70% of the total $220B. USDC holds a distant second position at maybe 25-30%, while all other stablecoins (DAI, BUSD, FRAX, TrueUSD) represent tiny slivers. This creates a duopoly structure with significant market concentration risk.
+
+The visual clearly shows Tether (USDT) dominates the market, representing roughly 65-70% of the total $220B. USDC holds a distant second position at maybe 25-30%, while all other stablecoins (DAI, BUSD, FRAX, TrueUSD) represent tiny slivers. This creates a duopoly structure with significant market concentration risk.
 
 ## Features
 
