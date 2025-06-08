@@ -2,10 +2,23 @@
 
 A Next.js dashboard for tracking stablecoin market data with real-time analytics and visualizations, powered by Supabase.
 
+You can see the live dashboard at [stablecoins.gabrielgarciasuarez.com](https://stablecoins.gabrielgarciasuarez.com/).
+
+As of June 8th, 2025 this dahsboard showcases the following:
+
+1. Massive Scale with Strong Growth Momentum
+   The stablecoin market has reached $220B in total market capitalization with impressive 45.4% year-over-year growth. Daily trading volume of $32.4B shows this isn't just stored value but actively used financial infrastructure.
+
+2. Remarkable Stability Despite Scale
+   The 12-week chart shows the market has maintained steady levels around $220B with minimal volatility. The slight upward trend (+2.5% month-over-month) suggests controlled, sustainable growth rather than speculative bubbles.
+
+3. Big Market Concentration
+   The visual clearly shows Tether (USDT) dominates the market, representing roughly 65-70% of the total $220B. USDC holds a distant second position at maybe 25-30%, while all other stablecoins (DAI, BUSD, FRAX, TrueUSD) represent tiny slivers. This creates a duopoly structure with significant market concentration risk.
+
 ## Features
 
 - **Real-time Market Metrics**: Total market capitalization, 24h trading volume, month-over-month growth rates, and year-over-year market cap comparison
-- **Interactive Charts**: Historical market cap development over the past 12 months with area charts
+- **Interactive Charts**: Historical market cap development over the past 6 months with area charts
 - **Multi-Stablecoin Support**: Track USDT, USDC, BUSD, DAI and other major stablecoins
 - **Year-over-Year Analytics**: Track market cap growth trends with 51-week comparisons
 - **Responsive Design**: Modern UI built with Tailwind CSS and shadcn/ui components
@@ -142,13 +155,33 @@ The application also supports these optional RPC functions for improved performa
 ```
 src/
 ├── app/
-│   ├── api/dashboard/           # API routes
-│   ├── components/              # React components
-│   └── page.tsx                 # Main dashboard page
-├── lib/supabase/                # Supabase client configuration
-├── types/                       # TypeScript type definitions
-├── utils/                       # Database query helpers
-└── hooks/                       # Custom React hooks
+│   ├── api/
+│   │   └── dashboard/
+│   │       ├── chart-data/
+│   │       │   └── route.ts     # Chart data API endpoint
+│   │       └── metrics/
+│   │           └── route.ts     # Metrics API endpoint
+│   ├── components/
+│   │   ├── ui/
+│   │   │   ├── card.tsx         # Card UI component
+│   │   │   ├── chart.tsx        # Chart UI component
+│   │   │   └── select.tsx       # Select UI component
+│   │   └── StablecoinChartConnected.tsx # Main chart component
+│   ├── globals.css              # Global styles
+│   ├── layout.tsx               # Root layout
+│   ├── page.tsx                 # Main dashboard page
+│   └── favicon.ico
+├── hooks/
+│   └── useDashboardMetrics.ts   # Dashboard metrics custom hook
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts            # Supabase client for client-side
+│   │   └── server.ts            # Supabase client for server-side
+│   └── utils.ts                 # Utility functions
+├── types/
+│   └── database.ts              # TypeScript database type definitions
+└── utils/
+    └── queries.ts               # Database query functions
 ```
 
 ## Key Components
