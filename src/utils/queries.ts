@@ -4,6 +4,24 @@ import type { ChartDataPoint, WeeklyMarketData } from '@/types/database';
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 /**
+ * Helper function to get the latest timestamp from the dataset
+ */
+async function getLatestTimestamp(supabase: SupabaseClient): Promise<Date> {
+  const { data: latestTimestamp, error: timestampError } = await supabase
+    .from('stablecoin_market_caps')
+    .select('timestamp_utc')
+    .order('timestamp_utc', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (timestampError || !latestTimestamp) {
+    throw new Error(`Failed to fetch latest timestamp: ${timestampError?.message}`);
+  }
+
+  return new Date(latestTimestamp.timestamp_utc);
+}
+
+/**
  * Fetches the total market capitalization for the current day
  * Uses the first record per coin for today's date (ranked by timestamp)
  */
@@ -20,7 +38,8 @@ export async function getTotalMarketCap(supabase: SupabaseClient): Promise<numbe
     // from stablecoin_market_caps where date_trunc('day',now()) = timestamp_utc::date)
     // select sum(market_cap_usd) as total_current_market_cap from temp where rank = 1
     
-    const today = new Date();
+    // Use the latest date from the dataset instead of new Date()
+    const today = await getLatestTimestamp(supabase);
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
@@ -38,21 +57,12 @@ export async function getTotalMarketCap(supabase: SupabaseClient): Promise<numbe
 
     if (!todayRecords || todayRecords.length === 0) {
       // If no data for today, fall back to the most recent data
-      const { data: latestTimestamp, error: timestampError } = await supabase
-        .from('stablecoin_market_caps')
-        .select('timestamp_utc')
-        .order('timestamp_utc', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (timestampError || !latestTimestamp) {
-        throw new Error(`Failed to fetch latest timestamp: ${timestampError?.message}`);
-      }
+      const latestTimestamp = await getLatestTimestamp(supabase);
 
       const { data: latestData, error: latestError } = await supabase
         .from('stablecoin_market_caps')
         .select('market_cap_usd')
-        .eq('timestamp_utc', latestTimestamp.timestamp_utc);
+        .eq('timestamp_utc', latestTimestamp.toISOString());
 
       if (latestError) {
         throw new Error(`Failed to fetch latest market cap: ${latestError.message}`);
@@ -90,7 +100,7 @@ export async function getTotalMarketCapChange(supabase: SupabaseClient): Promise
     console.warn('RPC function not available, falling back to manual calculation:', error.message);
     
     // Fallback to manual implementation
-    const today = new Date();
+    const today = await getLatestTimestamp(supabase);
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
     
@@ -168,7 +178,7 @@ export async function getTotalVolume24h(supabase: SupabaseClient): Promise<numbe
     // from stablecoin_market_caps where date_trunc('day',now()) = timestamp_utc::date)
     // select sum(volume_24h_usd) as total_current_volume from temp where rank = 1
     
-    const today = new Date();
+    const today = await getLatestTimestamp(supabase);
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
@@ -186,21 +196,12 @@ export async function getTotalVolume24h(supabase: SupabaseClient): Promise<numbe
 
     if (!todayRecords || todayRecords.length === 0) {
       // If no data for today, fall back to the most recent data
-      const { data: latestTimestamp, error: timestampError } = await supabase
-        .from('stablecoin_market_caps')
-        .select('timestamp_utc')
-        .order('timestamp_utc', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (timestampError || !latestTimestamp) {
-        throw new Error(`Failed to fetch latest timestamp: ${timestampError?.message}`);
-      }
+      const latestTimestamp = await getLatestTimestamp(supabase);
 
       const { data: latestData, error: latestError } = await supabase
         .from('stablecoin_market_caps')
         .select('volume_24h_usd')
-        .eq('timestamp_utc', latestTimestamp.timestamp_utc);
+        .eq('timestamp_utc', latestTimestamp.toISOString());
 
       if (latestError) {
         throw new Error(`Failed to fetch latest volume: ${latestError.message}`);
@@ -238,7 +239,7 @@ export async function getTotalVolumeChange(supabase: SupabaseClient): Promise<nu
     console.warn('RPC function not available, falling back to manual calculation:', error.message);
     
     // Fallback to manual implementation
-    const today = new Date();
+    const today = await getLatestTimestamp(supabase);
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
     
@@ -356,7 +357,7 @@ export async function getMonthlyGrowthRate(supabase: SupabaseClient): Promise<nu
  * Fetches weekly market cap data for the last 12 months for chart visualization
  */
 export async function getWeeklyChartData(supabase: SupabaseClient): Promise<ChartDataPoint[]> {
-  const twelveMonthsAgo = new Date();
+  const twelveMonthsAgo = await getLatestTimestamp(supabase);
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
   const { data, error } = await supabase
@@ -555,18 +556,7 @@ export async function getMarketCapChangeFromLastYear(supabase: SupabaseClient): 
     
     // Fallback to manual implementation
     // Get the latest timestamp in the database
-    const { data: latestTimestamp, error: timestampError } = await supabase
-      .from('stablecoin_market_caps')
-      .select('timestamp_utc')
-      .order('timestamp_utc', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (timestampError || !latestTimestamp) {
-      throw new Error(`Failed to fetch latest timestamp: ${timestampError?.message}`);
-    }
-
-    const latestDate = new Date(latestTimestamp.timestamp_utc);
+    const latestDate = await getLatestTimestamp(supabase);
     const latestDayStart = new Date(latestDate.getFullYear(), latestDate.getMonth(), latestDate.getDate());
     const latestDayEnd = new Date(latestDayStart.getTime() + 24 * 60 * 60 * 1000);
     
