@@ -124,7 +124,7 @@ export default function Dashboard() {
           {!loading && (
             <button
               onClick={refetch}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+              className="hidden md:inline-flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
             >
               <RefreshCw className="h-4 w-4" />
               Refresh Data
@@ -264,7 +264,7 @@ export default function Dashboard() {
 
         <div className="grid gap-4 grid-cols-1">
           <Card className="col-span-4">
-            <StablecoinChartConnected className="h-[415px]" />
+            <StablecoinChartConnected className="h-[550px] md:h-[415px] " />
           </Card>
         </div>
       </div>

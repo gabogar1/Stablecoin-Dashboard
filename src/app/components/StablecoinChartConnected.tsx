@@ -176,7 +176,7 @@ export function StablecoinChartConnected({
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState("12w"); // Default to 12 weeks
+  const [timeRange, setTimeRange] = useState("26w"); // Default to 12 weeks
 
   useEffect(() => {
     async function fetchChartData() {
@@ -228,8 +228,11 @@ export function StablecoinChartConnected({
       case "26w":
         weeksToSubtract = 26;
         break;
+      case "52w":
+        weeksToSubtract = 52;
+        break;
       default:
-        weeksToSubtract = 12;
+        weeksToSubtract = 26;
     }
 
     const startDate = new Date(now);
