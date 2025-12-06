@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getDb } from '@/lib/db';
 import {
   getTotalMarketCap,
   getTotalVolume24h,
@@ -16,7 +16,7 @@ import type { DashboardMetrics, ApiResponse } from '@/types/database';
  */
 export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>> {
   try {
-    const supabase = await createClient();
+    const db = getDb();
 
     // Fetch all metrics in parallel for better performance
     const [
@@ -28,28 +28,23 @@ export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>
       totalMarketCapChangeYoy,
       lastUpdatedResult,
     ] = await Promise.all([
-      getTotalMarketCap(supabase),
-      getTotalVolume24h(supabase),
-      getMonthlyGrowthRate(supabase),
-      getTotalMarketCapChange(supabase),
-      getTotalVolumeChange(supabase),
-      getMarketCapChangeFromLastYear(supabase),
-      // Fetch the most recent updated_at date
-      supabase
-        .from('stablecoin_market_caps')
-        .select('updated_at')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .single(),
+      getTotalMarketCap(db),
+      getTotalVolume24h(db),
+      getMonthlyGrowthRate(db),
+      getTotalMarketCapChange(db),
+      getTotalVolumeChange(db),
+      getMarketCapChangeFromLastYear(db),
+      db.query<{ updated_at: string }>(
+        'SELECT updated_at FROM stablecoin_market_caps ORDER BY updated_at DESC LIMIT 1;'
+      ),
     ]);
 
-    // Handle potential error from lastUpdatedResult
-    if (lastUpdatedResult.error) {
-      throw new Error(`Failed to fetch last updated date: ${lastUpdatedResult.error.message}`);
+    const lastUpdatedValue = lastUpdatedResult.rows[0]?.updated_at;
+    if (!lastUpdatedValue) {
+      throw new Error('Failed to fetch last updated date');
     }
 
-    // Format the date as "Jun 3, 2025"
-    const lastUpdatedDate = new Date(lastUpdatedResult.data.updated_at);
+    const lastUpdatedDate = new Date(lastUpdatedValue);
     const lastUpdated = lastUpdatedDate.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getDb } from '@/lib/db';
 import { getMarketPerCoinPerWeek } from '@/utils/queries';
 import type { ChartDataPoint, ApiResponse } from '@/types/database';
 
@@ -9,10 +9,10 @@ import type { ChartDataPoint, ApiResponse } from '@/types/database';
  */
 export async function GET(): Promise<NextResponse<ApiResponse<ChartDataPoint[]>>> {
   try {
-    const supabase = await createClient();
+    const db = getDb();
 
     // Get weekly market data per coin
-    const weeklyMarketData = await getMarketPerCoinPerWeek(supabase);
+    const weeklyMarketData = await getMarketPerCoinPerWeek(db);
 
     if (!weeklyMarketData || weeklyMarketData.length === 0) {
       return NextResponse.json({
