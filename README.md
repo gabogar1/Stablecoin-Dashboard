@@ -30,7 +30,7 @@ As of June 8th, 2025 this dahsboard showcases the following:
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15 (App Router), React 19, TypeScript
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript
 - **Styling**: Tailwind CSS, shadcn/ui components
 - **Charts**: Recharts.js
 - **Database**: Supabase (PostgreSQL)
